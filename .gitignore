@@ -1,4 +1,7 @@
 
-Server/.vs/SkyDrive/v15/.suo
+Server/.vs
 Server/SkyDrive/bin
 Server/SkyDrive/obj
+Client/.vs
+Client/SkyDrive.Client/bin
+Client/SkyDrive.Client/obj
