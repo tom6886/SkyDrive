@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace SkyDrive.Client
@@ -17,7 +18,7 @@ namespace SkyDrive.Client
             InitializeComponent();
         }
 
-        private void btn_upload_Click(object sender, EventArgs e)
+        private async void btn_upload_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.InitialDirectory = @"C:\";
@@ -32,29 +33,31 @@ namespace SkyDrive.Client
 
                 try
                 {
+                    FileListItem item = await NewFileListItemAsync(file);
 
+                    panel_list.Controls.Add(item);
 
                     //首先校验文件MD5，若服务器存在相同文件，则实现极速秒传，若不存在，则将文件复制到临时文件夹，准备后续操作
+                    SetFileItemMsg(item, "校验文件中...");
+
+                    string md5Str = string.Empty;
+
                     double length = Math.Ceiling(file.Length / 1024.0);
 
                     //if (length < 102400 * 10)
                     //{
-                    //    beginTime = DateTime.Now;
-                    //    string md5Str = MD5Checker.Check(ofd.FileName);
-                    //    memoEdit1.Text = "验算完成，MD5值：" + md5Str + "\r\n";
-                    //    memoEdit1.MaskBox.AppendText("验算耗费时间：" + (DateTime.Now - beginTime).TotalSeconds + "s");
+                    //    md5Str = MD5Checker.Check(ofd.FileName);
                     //}
                     //else
                     //{
-                    //    memoEdit1.Text = "文件大小超过1G，开启异步计算\r\n";
-                    //    progress = 0;
-                    //    beginTime = DateTime.Now;
                     //    MD5Checker checker = new MD5Checker();
+
                     //    checker.AsyncCheckProgress += Checker_AsyncCheckProgress;
+
                     //    checker.AsyncCheck(ofd.FileName);
                     //}
 
-                    //先将文件复制到临时文件夹
+                    //将文件复制到临时文件夹
                     string temp = AppDomain.CurrentDomain.BaseDirectory + "\\Temp\\" + file.Name; //临时文件路径
 
                     File.Copy(file.FullName, temp);
@@ -83,13 +86,33 @@ namespace SkyDrive.Client
         }
 
         #region 方法
-        private FileListItem AddFileListItem(FileInfo info)
+        private async Task<FileListItem> NewFileListItemAsync(FileInfo info)
         {
-            FileListItem item = new FileListItem();
-            item.FileName = info.Name;
-            item.FileSize = info.Length;
+            return await Task.Run(() =>
+            {
+                FileListItem item = new FileListItem();
+                item.FileName = info.Name;
+                item.FileSize = info.Length;
+                return item;
+            });
+        }
 
-            return item;
+        
+        #endregion
+
+        #region 操作UI
+        private delegate void setFileItemMsgHandler(FileListItem control, string msg);
+
+        private void SetFileItemMsg(FileListItem control, string msg)
+        {
+            if (control.InvokeRequired)
+            {
+                BeginInvoke(new setFileItemMsgHandler(SetFileItemMsg), control, msg);
+            }
+            else
+            {
+                control.StateLabel.Text = msg;
+            }
         }
 
 

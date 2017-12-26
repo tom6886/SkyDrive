@@ -30,8 +30,8 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.btn_upload = new DevExpress.XtraEditors.SimpleButton();
-            this.panelControl1 = new DevExpress.XtraEditors.PanelControl();
-            ((System.ComponentModel.ISupportInitialize)(this.panelControl1)).BeginInit();
+            this.panel_list = new DevExpress.XtraEditors.PanelControl();
+            ((System.ComponentModel.ISupportInitialize)(this.panel_list)).BeginInit();
             this.SuspendLayout();
             // 
             // btn_upload
@@ -46,25 +46,25 @@
             this.btn_upload.Text = "上传";
             this.btn_upload.Click += new System.EventHandler(this.btn_upload_Click);
             // 
-            // panelControl1
+            // panel_list
             // 
-            this.panelControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelControl1.Location = new System.Drawing.Point(0, 63);
-            this.panelControl1.Name = "panelControl1";
-            this.panelControl1.Size = new System.Drawing.Size(737, 384);
-            this.panelControl1.TabIndex = 1;
+            this.panel_list.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel_list.Location = new System.Drawing.Point(0, 63);
+            this.panel_list.Name = "panel_list";
+            this.panel_list.Size = new System.Drawing.Size(737, 384);
+            this.panel_list.TabIndex = 1;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(737, 447);
-            this.Controls.Add(this.panelControl1);
+            this.Controls.Add(this.panel_list);
             this.Controls.Add(this.btn_upload);
             this.Name = "Form1";
             this.ShowIcon = false;
             this.Text = "网盘";
-            ((System.ComponentModel.ISupportInitialize)(this.panelControl1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.panel_list)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -72,7 +72,7 @@
         #endregion
 
         private DevExpress.XtraEditors.SimpleButton btn_upload;
-        private DevExpress.XtraEditors.PanelControl panelControl1;
+        private DevExpress.XtraEditors.PanelControl panel_list;
     }
 }
 

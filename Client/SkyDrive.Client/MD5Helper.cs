@@ -4,22 +4,30 @@ using System.Security.Cryptography;
 
 namespace SkyDrive.Client
 {
-    public delegate void AsyncCheckHeadler(AsyncCheckEventArgs e);
-
     public class MD5Checker
     {
+        #region 属性
         //支持所有哈希算法  
-        private static HashAlgorithm hashAlgorithm;
-
+        private HashAlgorithm hashAlgorithm;
         //文件缓冲区  
-        private static byte[] buffer;
-
+        private byte[] buffer;
         //文件读取流  
-        private static Stream inputStream;
+        private Stream inputStream;
+        #endregion
 
+        #region 委托与方法
+        /// <summary>
+        /// 异步读取文件的委托
+        /// </summary>
+        /// <param name="e"></param>
+        public delegate void AsyncCheckHeadler(AsyncCheckEventArgs e);
+        /// <summary>
+        /// 异步读取文件的方法
+        /// </summary>
         public event AsyncCheckHeadler AsyncCheckProgress;
+        #endregion
 
-        public static string Check(string path)
+        public string Check(string path)
         {
             if (!File.Exists(path))
                 throw new ArgumentException(string.Format("<{0}>, 不存在", path));
@@ -58,8 +66,7 @@ namespace SkyDrive.Client
                 //输出进度  
                 string pro = string.Format("{0:0.00}", ((double)inputStream.Position / inputStream.Length) * 100);
 
-                if (null != AsyncCheckProgress)
-                    AsyncCheckProgress(new AsyncCheckEventArgs(AsyncCheckState.Checking, pro));
+                AsyncCheckProgress?.Invoke(new AsyncCheckEventArgs(AsyncCheckState.Checking, pro));
 
                 var output = new byte[buffer.Length];
                 //分块计算哈希值  
@@ -77,7 +84,7 @@ namespace SkyDrive.Client
 
             string md5 = BitConverter.ToString(hashAlgorithm.Hash).Replace("-", "");
 
-            AsyncCheckProgress(new AsyncCheckEventArgs(AsyncCheckState.Completed, md5));
+            AsyncCheckProgress?.Invoke(new AsyncCheckEventArgs(AsyncCheckState.Completed, md5));
 
             //关闭流  
             inputStream.Close();

@@ -41,7 +41,7 @@ namespace SkyDrive.Client
             }
         }
 
-        private int _UploadState = 0;
+        private int _UploadState = -1;
 
         [Browsable(true)]
         [Description("上传状态"), Category("UploadState"), DefaultValue("")]
@@ -49,7 +49,9 @@ namespace SkyDrive.Client
         {
             set
             {
-                btn_play.Image = value == 0 ? Resources.pause : Resources.start;
+                _UploadState = value;
+                btn_play.Image = value > 0 ? Resources.pause : Resources.start;
+                btn_play.Enabled = value > -1;
             }
             get
             {
@@ -70,6 +72,8 @@ namespace SkyDrive.Client
                 return progress.Position;
             }
         }
+
+        public string MD5 { get; set; }
 
         public LabelControl StateLabel { get { return lb_msg; } }
         #endregion
