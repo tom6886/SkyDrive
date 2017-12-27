@@ -73,6 +73,8 @@ namespace SkyDrive.Client
             }
         }
 
+        public string ID { get; set; }
+
         public string MD5 { get; set; }
 
         public LabelControl StateLabel { get { return lb_msg; } }

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using XUtils;
 
 namespace SkyDrive.Client
 {
@@ -91,13 +92,14 @@ namespace SkyDrive.Client
             return await Task.Run(() =>
             {
                 FileListItem item = new FileListItem();
+                item.ID = StringUtil.UniqueID();
                 item.FileName = info.Name;
                 item.FileSize = info.Length;
                 return item;
             });
         }
 
-        
+
         #endregion
 
         #region 操作UI
