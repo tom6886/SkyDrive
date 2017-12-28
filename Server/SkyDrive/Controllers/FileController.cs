@@ -19,7 +19,7 @@ namespace SkyDrive.Controllers
             return View();
         }
 
-
+        [HttpPost]
         public async Task<int> MD5Check(string md5Str)
         {
             if (string.IsNullOrEmpty(md5Str)) { return -1; }

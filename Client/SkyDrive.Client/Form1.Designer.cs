@@ -41,7 +41,7 @@
             this.btn_upload.ImageLocation = DevExpress.XtraEditors.ImageLocation.TopCenter;
             this.btn_upload.Location = new System.Drawing.Point(0, 0);
             this.btn_upload.Name = "btn_upload";
-            this.btn_upload.Size = new System.Drawing.Size(737, 63);
+            this.btn_upload.Size = new System.Drawing.Size(834, 63);
             this.btn_upload.TabIndex = 0;
             this.btn_upload.Text = "上传";
             this.btn_upload.Click += new System.EventHandler(this.btn_upload_Click);
@@ -51,14 +51,14 @@
             this.panel_list.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_list.Location = new System.Drawing.Point(0, 63);
             this.panel_list.Name = "panel_list";
-            this.panel_list.Size = new System.Drawing.Size(737, 384);
+            this.panel_list.Size = new System.Drawing.Size(834, 384);
             this.panel_list.TabIndex = 1;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(737, 447);
+            this.ClientSize = new System.Drawing.Size(834, 447);
             this.Controls.Add(this.panel_list);
             this.Controls.Add(this.btn_upload);
             this.Name = "Form1";

@@ -5,3 +5,5 @@ Server/SkyDrive/obj
 Client/.vs
 Client/SkyDrive.Client/bin
 Client/SkyDrive.Client/obj
+Client/SkyDrive.Client.Models/bin
+Client/SkyDrive.Client.Models/obj

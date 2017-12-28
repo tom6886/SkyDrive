@@ -46,6 +46,7 @@
             // 
             // panelControl1
             // 
+            this.panelControl1.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.Office2003;
             this.panelControl1.Controls.Add(this.btn_open);
             this.panelControl1.Controls.Add(this.btn_delete);
             this.panelControl1.Controls.Add(this.btn_play);

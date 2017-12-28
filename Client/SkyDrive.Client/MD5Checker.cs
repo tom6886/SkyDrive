@@ -20,11 +20,11 @@ namespace SkyDrive.Client
         /// 异步读取文件的委托
         /// </summary>
         /// <param name="e"></param>
-        internal delegate void AsyncCheckHeadler(AsyncCheckEventArgs e);
+        internal delegate void AsyncCheckHandler(AsyncCheckEventArgs e);
         /// <summary>
         /// 异步读取文件的方法
         /// </summary>
-        internal event AsyncCheckHeadler AsyncCheckProgress;
+        internal event AsyncCheckHandler AsyncCheckProgress;
         #endregion
 
         internal string Check(string path)
