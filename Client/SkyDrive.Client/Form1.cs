@@ -41,6 +41,8 @@ namespace SkyDrive.Client
 
                 try
                 {
+                    //todo 若所选文件已存在于上传列表时 询问是否重新上传
+
                     FileListItem item = await NewFileListItemAsync(file);
 
                     lock (uploadList) { uploadList.Add(item); }
@@ -48,18 +50,13 @@ namespace SkyDrive.Client
                     panel_list.Controls.Add(item);
 
                     //保存上传文件的数据到本地sqllite 方便中途关闭客户端后 再打开可以继续上传
-                    SaveFileInfo(item.ID, file);
+                    await Task.Run(() => SaveFileInfo(item));
 
                     //对新上传的文件进行处理，首先校验文件MD5
                     //若服务器存在相同文件，则实现极速秒传，若不存在，则将文件复制到临时文件夹，准备后续操作
                     SetFileItemMsg(item, "校验文件中...");
 
-                    MD5Check(item.ID, file);
-
-                    //将文件复制到临时文件夹
-                    //string temp = AppDomain.CurrentDomain.BaseDirectory + "\\Temp\\" + file.Name; //临时文件路径
-
-                    //File.Copy(file.FullName, temp);
+                    MD5Check(item);
                 }
                 catch (Exception ex)
                 {
@@ -76,62 +73,95 @@ namespace SkyDrive.Client
                 FileListItem item = new FileListItem();
                 item.ID = StringUtil.UniqueID();
                 item.FileName = info.Name;
+                item.BackUpName = info.Name;
                 item.FileSize = info.Length;
+                item.FileSource = info.FullName;
                 item.Dock = DockStyle.Top;
                 return item;
             });
         }
 
-        private void SaveFileInfo(string id, FileInfo file)
+        private void SaveFileInfo(FileListItem item)
         {
-            Task.Run(() =>
+            try
             {
                 using (DBContext db = new DBContext())
                 {
                     UploadFiles upload = new UploadFiles()
                     {
-                        ID = id,
-                        FileName = file.Name,
-                        FileSource = file.FullName,
-                        FileSize = file.Length
+                        ID = item.ID,
+                        FileName = item.FileName,
+                        BackUpName = item.BackUpName,
+                        FileSource = item.FileSource,
+                        FileSize = item.FileSize
                     };
 
                     db.UploadFiles.Add(upload);
 
                     db.SaveChanges();
                 }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog("保存文件信息时出错", ex.Message, ex.StackTrace);
+            }
+        }
+
+        private void SetFileMD5(string id, string MD5)
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    using (DBContext db = new DBContext())
+                    {
+                        UploadFiles upload = db.UploadFiles.Where(q => q.ID.Equals(id)).FirstOrDefault();
+
+                        if (upload == null) { return; }
+
+                        upload.MD5 = MD5;
+
+                        db.Entry(upload).State = System.Data.Entity.EntityState.Modified;
+
+                        db.SaveChanges();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.WriteLog("更新文明MD5时出错", ex.Message, ex.StackTrace);
+                }
             });
         }
 
         #region MD5
-        private void MD5Check(string id, FileInfo file)
+        private void MD5Check(FileListItem item)
         {
             IMD5Checker checker = md5CheckerList.Where(q => q.State == 0).FirstOrDefault();
 
             if (checker == null)
             {
-                checker = new IMD5Checker(id);
+                checker = new IMD5Checker(item.ID);
                 checker.AsyncCheckProgress += Checker_AsyncCheckProgress;
                 lock (md5CheckerList) { md5CheckerList.Add(checker); }
             }
             else
             {
-                checker.ID = id;
+                checker.ID = item.ID;
                 checker.State = 1;
                 checker.Progress = 0;
             }
 
-            double length = Math.Ceiling(file.Length / 1024.0);
+            double length = Math.Ceiling(item.FileSize / 1024.0);
 
             if (length < 1024 * 500)
             {
-                string md5Str = checker.MD5Checker.Check(file.FullName);
-                ServerMD5Check(id, md5Str);
+                string md5Str = checker.MD5Checker.Check(item.FileSource);
+                ServerMD5Check(item.ID, md5Str);
             }
             else
             {
                 //文件大于500M则启动异步验算
-                checker.MD5Checker.AsyncCheck(file.FullName);
+                checker.MD5Checker.AsyncCheck(item.FileSource);
             }
         }
 
@@ -157,17 +187,69 @@ namespace SkyDrive.Client
         /// </summary>
         /// <param name="id"></param>
         /// <param name="MD5"></param>
-        private void ServerMD5Check(string id, string MD5)
+        private async void ServerMD5Check(string id, string MD5)
         {
             FileListItem control = uploadList.Where(q => q.ID.Equals(id)).FirstOrDefault();
 
             if (control == null) { return; }
 
-            SetFileItemMsg(control, "校验文件完毕..");
+            SetFileItemMsg(control, "校验文件完毕，准备上传..");
+
+            //更新对应控件以及sqllite中对应文件信息的MD5值
+            control.MD5 = MD5;
+
+            SetFileMD5(id, MD5);
 
             RequestResult result = RequestContext.Post("md5Check", "md5Str=" + MD5);
 
+            if (result == null) { MessageBox.Show("无法获取上传路径，请联系管理员"); return; }
 
+            if (result.Flag == 1)
+            {
+                //若服务端存在相同MD5的文件，则开启极速秒传，仅上传用户信息
+                SetFileItemMsg(control, "开启极速秒传..");
+
+                //todo 上传用户信息，结束后移除控件
+            }
+
+            //若服务端不存在相同MD5的文件，则复制本地文件到临时文件夹，准备上传
+            await Task.Run(() => { CopyFile(control); });
+
+
+        }
+        #endregion
+
+        #region 操作文件
+        private void CopyFile(FileListItem control)
+        {
+            string temp = AppDomain.CurrentDomain.BaseDirectory + "\\Temp\\" + control.FileName; //临时文件路径
+
+            //若临时文件夹中已存在同名文件，则文件名加当前时间点保存为备用文件名
+            if (File.Exists(temp))
+            {
+                int i = control.FileName.LastIndexOf(".");
+
+                string backUpName = control.FileName.Substring(0, i) + DateTime.Now.ToString("yyyyMMddHHmmss") + control.FileName.Substring(i);
+
+                temp = AppDomain.CurrentDomain.BaseDirectory + "\\Temp\\" + backUpName;
+
+                control.BackUpName = backUpName;
+
+                using (DBContext db = new DBContext())
+                {
+                    UploadFiles upload = db.UploadFiles.Where(q => q.ID.Equals(control.ID)).FirstOrDefault();
+
+                    if (upload == null) { SetFileItemMsg(control, "未找到对应上传记录"); }
+
+                    upload.BackUpName = backUpName;
+
+                    db.Entry(upload).State = System.Data.Entity.EntityState.Modified;
+
+                    db.SaveChanges();
+                }
+            }
+
+            File.Copy(control.FileSource, temp);
         }
         #endregion
 

@@ -9,7 +9,11 @@ namespace SkyDrive.Client.Models
         [Key]
         public string ID { get; set; }
 
+        public string MD5 { get; set; }
+
         public string FileName { get; set; }
+
+        public string BackUpName { get; set; }
 
         public string FileSource { get; set; }
 

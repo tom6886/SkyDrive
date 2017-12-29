@@ -81,6 +81,10 @@ namespace SkyDrive.Client
         public int State { get { return _State; } set { _State = value; btn_play.Enabled = value > 0; } }
 
         public LabelControl StateLabel { get { return lb_msg; } }
+
+        public string FileSource { get; set; }
+
+        public string BackUpName { get; set; }
         #endregion
 
         public FileListItem()
