@@ -163,6 +163,10 @@ namespace SkyDrive.Client
 
             if (control == null) { return; }
 
+            SetFileItemMsg(control, "校验文件完毕..");
+
+            RequestResult result = RequestContext.Post("md5Check", "md5Str=" + MD5);
+
 
         }
         #endregion
