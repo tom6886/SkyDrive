@@ -78,8 +78,14 @@ namespace SkyDrive.Client
                 item.FileSize = info.Length;
                 item.FileSource = info.FullName;
                 item.Dock = DockStyle.Top;
+                item.ChangeState += Item_ChangeState;
                 return item;
             });
+        }
+
+        private void Item_ChangeState(FileListItem sender, int state)
+        {
+            throw new NotImplementedException();
         }
 
         private void SaveFileInfo(FileListItem item)
@@ -242,6 +248,8 @@ namespace SkyDrive.Client
             //若服务端不存在相同MD5的文件，则复制本地文件到临时文件夹，准备上传
             await Task.Run(() => { CopyFile(control); });
 
+            SetFileItemMsg(control, "开始上传...");
+
             //复制文件后上传用户文件信息
             UploadUserFile(control, UploadInNormal);
         }
@@ -282,6 +290,10 @@ namespace SkyDrive.Client
         #endregion
 
         #region 上传用户文件信息
+        /// <summary>
+        /// 上传文件信息之后事件的委托
+        /// </summary>
+        /// <param name="control"></param>
         private delegate void AfterUploadUserFile(FileListItem control);
 
         private async void UploadUserFile(FileListItem control, AfterUploadUserFile afterUploadUserFile)
@@ -291,8 +303,6 @@ namespace SkyDrive.Client
             if (uploadInfoResult == null) { SetFileItemMsg(control, "无法获取上传文件信息路径", Color.Red); return; }
 
             if (uploadInfoResult.Flag < 0) { SetFileItemMsg(control, "初始化服务器文件出错", Color.Red); return; }
-
-            SetFileItemMsg(control, "开始上传...");
 
             afterUploadUserFile(control);
         }

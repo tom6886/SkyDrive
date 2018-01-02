@@ -49,8 +49,11 @@ namespace SkyDrive.Client
         {
             set
             {
+                if (value == _UploadState) { return; }
+
                 _UploadState = value;
                 btn_play.Image = value > 0 ? Resources.pause : Resources.start;
+                ChangeState?.Invoke(this, value);
             }
             get
             {
@@ -87,12 +90,19 @@ namespace SkyDrive.Client
         public string BackUpName { get; set; }
         #endregion
 
-        public FileListItem()
-        {
-            InitializeComponent();
-        }
+        #region 委托和事件
+        /// <summary>
+        /// 上传状态改变的委托
+        /// </summary>
+        /// <param name="sender"></param>
+        public delegate void ChangeStateHandler(FileListItem sender, int state);
+        /// <summary>
+        /// 上传状态改变的事件
+        /// </summary>
+        public event ChangeStateHandler ChangeState;
+        #endregion
 
-        #region 方法
+        #region 私有方法
 
         private string CountSize(double size)
         {
@@ -107,5 +117,15 @@ namespace SkyDrive.Client
             return Math.Round(size) + units[i];
         }
         #endregion
+
+        public FileListItem()
+        {
+            InitializeComponent();
+        }
+
+        private void btn_play_Click(object sender, EventArgs e)
+        {
+            UploadState = _UploadState == 0 ? 1 : 0;
+        }
     }
 }

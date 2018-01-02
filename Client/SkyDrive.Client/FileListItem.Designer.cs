@@ -87,14 +87,14 @@
             this.btn_play.Size = new System.Drawing.Size(24, 24);
             this.btn_play.TabIndex = 4;
             this.btn_play.TabStop = false;
+            this.btn_play.Click += new System.EventHandler(this.btn_play_Click);
             // 
             // lb_msg
             // 
             this.lb_msg.Location = new System.Drawing.Point(244, 29);
             this.lb_msg.Name = "lb_msg";
-            this.lb_msg.Size = new System.Drawing.Size(48, 14);
+            this.lb_msg.Size = new System.Drawing.Size(0, 14);
             this.lb_msg.TabIndex = 3;
-            this.lb_msg.Text = "上传状态";
             // 
             // progress
             // 
