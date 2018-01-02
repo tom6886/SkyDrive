@@ -108,6 +108,27 @@ namespace SkyDrive.Client
             }
         }
 
+        private void RemoveFileInfo(string id)
+        {
+            try
+            {
+                using (DBContext db = new DBContext())
+                {
+                    UploadFiles upload = db.UploadFiles.Where(q => q.ID.Equals(id)).FirstOrDefault();
+
+                    if (upload == null) { return; }
+
+                    db.UploadFiles.Remove(upload);
+
+                    db.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog("保存文件信息时出错", ex.Message, ex.StackTrace);
+            }
+        }
+
         private void SetFileMD5(string id, string MD5)
         {
             Task.Run(() =>
@@ -212,20 +233,17 @@ namespace SkyDrive.Client
                 //若服务端存在相同MD5的文件，则开启极速秒传，仅上传用户信息
                 SetFileItemMsg(control, "开启极速秒传..");
 
-                //todo 上传用户信息，结束后移除控件
+                //上传用户信息，结束后移除控件
+                UploadUserFile(control, UploadInSecond);
+
+                return;
             }
 
             //若服务端不存在相同MD5的文件，则复制本地文件到临时文件夹，准备上传
             await Task.Run(() => { CopyFile(control); });
 
             //复制文件后上传用户文件信息
-            RequestResult uploadInfoResult = await Task.Run(() => { return RequestContext.Post("newUserFile", "userID=admin&md5Str=" + control.MD5 + "&fileName=" + control.FileName); });
-
-            if (uploadInfoResult == null) { SetFileItemMsg(control, "无法获取上传文件信息路径", Color.Red); return; }
-
-            if (uploadInfoResult.Flag < 0) { SetFileItemMsg(control, "初始化服务器文件出错", Color.Red); return; }
-
-            SetFileItemMsg(control, "开始上传...");
+            UploadUserFile(control, UploadInNormal);
         }
         #endregion
 
@@ -262,6 +280,38 @@ namespace SkyDrive.Client
             File.Copy(control.FileSource, temp);
         }
         #endregion
+
+        #region 上传用户文件信息
+        private delegate void AfterUploadUserFile(FileListItem control);
+
+        private async void UploadUserFile(FileListItem control, AfterUploadUserFile afterUploadUserFile)
+        {
+            RequestResult uploadInfoResult = await Task.Run(() => { return RequestContext.Post("newUserFile", "userID=admin&md5Str=" + control.MD5 + "&fileName=" + control.FileName); });
+
+            if (uploadInfoResult == null) { SetFileItemMsg(control, "无法获取上传文件信息路径", Color.Red); return; }
+
+            if (uploadInfoResult.Flag < 0) { SetFileItemMsg(control, "初始化服务器文件出错", Color.Red); return; }
+
+            SetFileItemMsg(control, "开始上传...");
+
+            afterUploadUserFile(control);
+        }
+
+        private void UploadInNormal(FileListItem control)
+        {
+
+        }
+
+        private void UploadInSecond(FileListItem control)
+        {
+            Task.Run(() => { RemoveFileInfo(control.ID); });
+
+            lock (uploadList) { uploadList.Remove(control); }
+
+            control.Dispose();
+        }
+        #endregion
+
         #endregion
 
         #region 操作UI
