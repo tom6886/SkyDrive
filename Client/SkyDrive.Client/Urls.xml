@@ -3,4 +3,8 @@
     <key>md5Check</key>
     <value>/File/MD5Check</value>
   </url>
+  <url>
+    <key>newUserFile</key>
+    <value>/File/NewUserFile</value>
+  </url>
 </xml>

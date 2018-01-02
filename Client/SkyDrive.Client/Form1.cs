@@ -1,6 +1,7 @@
 ﻿using SkyDrive.Client.Models;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -200,9 +201,11 @@ namespace SkyDrive.Client
 
             SetFileMD5(id, MD5);
 
-            RequestResult result = RequestContext.Post("md5Check", "md5Str=" + MD5);
+            RequestResult result = await Task.Run(() => { return RequestContext.Post("md5Check", "md5Str=" + MD5); });
 
-            if (result == null) { MessageBox.Show("无法获取上传路径，请联系管理员"); return; }
+            if (result == null) { SetFileItemMsg(control, "无法获取上传路径", Color.Red); return; }
+
+            if (result.Flag < 0) { SetFileItemMsg(control, "验证MD5出错", Color.Red); return; }
 
             if (result.Flag == 1)
             {
@@ -215,7 +218,14 @@ namespace SkyDrive.Client
             //若服务端不存在相同MD5的文件，则复制本地文件到临时文件夹，准备上传
             await Task.Run(() => { CopyFile(control); });
 
+            //复制文件后上传用户文件信息
+            RequestResult uploadInfoResult = await Task.Run(() => { return RequestContext.Post("newUserFile", "userID=admin&md5Str=" + control.MD5 + "&fileName=" + control.FileName); });
 
+            if (uploadInfoResult == null) { SetFileItemMsg(control, "无法获取上传文件信息路径", Color.Red); return; }
+
+            if (uploadInfoResult.Flag < 0) { SetFileItemMsg(control, "初始化服务器文件出错", Color.Red); return; }
+
+            SetFileItemMsg(control, "开始上传...");
         }
         #endregion
 
@@ -252,25 +262,36 @@ namespace SkyDrive.Client
             File.Copy(control.FileSource, temp);
         }
         #endregion
-
         #endregion
 
         #region 操作UI
-        private delegate void setFileItemMsgHandler(FileListItem control, string msg);
+        private delegate void setFileItemMsgHandler(FileListItem control, string msg, Color color);
+
+        private void SetFileItemMsg(FileListItem control, string msg, Color color)
+        {
+            if (control.InvokeRequired)
+            {
+                BeginInvoke(new setFileItemMsgHandler(SetFileItemMsg), control, msg, color);
+            }
+            else
+            {
+                control.StateLabel.Text = msg;
+                control.StateLabel.ForeColor = color;
+            }
+        }
 
         private void SetFileItemMsg(FileListItem control, string msg)
         {
             if (control.InvokeRequired)
             {
-                BeginInvoke(new setFileItemMsgHandler(SetFileItemMsg), control, msg);
+                BeginInvoke(new setFileItemMsgHandler(SetFileItemMsg), control, msg, Color.Black);
             }
             else
             {
                 control.StateLabel.Text = msg;
+                control.StateLabel.ForeColor = Color.Black;
             }
         }
-
-
         #endregion
     }
 }
