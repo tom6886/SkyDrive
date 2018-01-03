@@ -99,8 +99,18 @@ namespace SkyDrive.Client
 
         private void Item_ChangeState(FileListItem sender, int state)
         {
+            if (state == 0) { sender.UploadTimer.Dispose(); return; }
 
+            System.Timers.Timer timer = new System.Timers.Timer();
+            timer.Interval = 1000;
+            timer.Elapsed += Timer_Elapsed;
 
+            sender.UploadTimer = timer;
+        }
+
+        private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         #region sqllite

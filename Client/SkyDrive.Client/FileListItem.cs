@@ -90,6 +90,8 @@ namespace SkyDrive.Client
         public string FileSource { get; set; }
 
         public string BackUpName { get; set; }
+
+        public System.Timers.Timer UploadTimer { get; set; }
         #endregion
 
         #region 委托和事件
