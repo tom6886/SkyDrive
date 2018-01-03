@@ -9,6 +9,8 @@ namespace SkyDrive.Client.Models
         [Key]
         public string ID { get; set; }
 
+        public string ServerFileID { get; set; }
+
         public string MD5 { get; set; }
 
         public string FileName { get; set; }

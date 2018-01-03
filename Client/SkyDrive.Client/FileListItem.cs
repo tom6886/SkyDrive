@@ -77,6 +77,8 @@ namespace SkyDrive.Client
 
         public string ID { get; set; }
 
+        public string ServerFileID { get; set; }
+
         public string MD5 { get; set; }
 
         private int _State = 0;

@@ -36,7 +36,7 @@ namespace SkyDrive.Controllers
 
             Files file = await _files.Find(Builders<Files>.Filter.Eq(q => q.MD5, md5Str)).FirstOrDefaultAsync();
 
-            if (file == null) { return JsonConvert.SerializeObject(new RequestResult() { Flag = 0, Message = "不存在相同MD5" }); }
+            if (file == null || file.State != 2) { return JsonConvert.SerializeObject(new RequestResult() { Flag = 0, Message = "不存在相同MD5" }); }
 
             return JsonConvert.SerializeObject(new RequestResult() { Flag = 1, Message = "存在相同MD5" });
         }
@@ -76,11 +76,40 @@ namespace SkyDrive.Controllers
 
                 _userFiles.InsertOne(userFile);
 
-                return JsonConvert.SerializeObject(new RequestResult() { Flag = 1, Message = "新建文件成功" });
+                return JsonConvert.SerializeObject(new RequestResult() { Flag = 1, Message = "新建文件成功", Data = userFile.Id.ToString() });
             }
             catch (Exception)
             {
                 return JsonConvert.SerializeObject(new RequestResult() { Flag = -2, Message = "新建文件失败" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<string> GetFileInfo(string id)
+        {
+            if (string.IsNullOrEmpty(id)) { return JsonConvert.SerializeObject(new RequestResult() { Flag = -1, Message = "参数错误" }); }
+
+            try
+            {
+                ObjectId _id = new ObjectId(id);
+
+                UserFiles userFile = await _userFiles.Find(Builders<UserFiles>.Filter.Eq(q => q.Id, _id)).FirstOrDefaultAsync();
+
+                Files file = await _files.Find(Builders<Files>.Filter.Eq(q => q.Id, userFile.FileID)).FirstOrDefaultAsync();
+
+                UserFileInfo userFileInfo = new UserFileInfo()
+                {
+                    FileName = userFile.FileName,
+                    MD5 = file.MD5,
+                    Position = file.Position,
+                    State = file.State
+                };
+
+                return JsonConvert.SerializeObject(new RequestResult() { Flag = 1, Message = "新建文件成功", Data = userFileInfo });
+            }
+            catch (Exception)
+            {
+                return JsonConvert.SerializeObject(new RequestResult() { Flag = -2, Message = "查询文件失败" });
             }
         }
     }

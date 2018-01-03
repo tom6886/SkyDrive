@@ -79,14 +79,31 @@ namespace SkyDrive.Client
                 item.FileSource = info.FullName;
                 item.Dock = DockStyle.Top;
                 item.ChangeState += Item_ChangeState;
+                item.Disposed += Item_Disposed;
                 return item;
             });
         }
 
+        private void Item_Disposed(object sender, EventArgs e)
+        {
+            FileListItem control = (FileListItem)sender;
+
+            Task.Run(() => { RemoveFileInfo(control.ID); });
+
+            lock (uploadList) { uploadList.Remove(control); }
+
+            string temp = AppDomain.CurrentDomain.BaseDirectory + "\\Temp\\" + control.FileName; //临时文件路径
+
+            if (File.Exists(temp)) { File.Delete(temp); }
+        }
+
         private void Item_ChangeState(FileListItem sender, int state)
         {
-            throw new NotImplementedException();
+
+
         }
+
+        #region sqllite
 
         private void SaveFileInfo(FileListItem item)
         {
@@ -122,7 +139,7 @@ namespace SkyDrive.Client
                 {
                     UploadFiles upload = db.UploadFiles.Where(q => q.ID.Equals(id)).FirstOrDefault();
 
-                    if (upload == null) { return; }
+                    if (upload == null) { LogHelper.WriteLog("保存文件信息时未查找到对应文件信息", null, null); return; }
 
                     db.UploadFiles.Remove(upload);
 
@@ -137,29 +154,50 @@ namespace SkyDrive.Client
 
         private void SetFileMD5(string id, string MD5)
         {
-            Task.Run(() =>
+            try
             {
-                try
+                using (DBContext db = new DBContext())
                 {
-                    using (DBContext db = new DBContext())
-                    {
-                        UploadFiles upload = db.UploadFiles.Where(q => q.ID.Equals(id)).FirstOrDefault();
+                    UploadFiles upload = db.UploadFiles.Where(q => q.ID.Equals(id)).FirstOrDefault();
 
-                        if (upload == null) { return; }
+                    if (upload == null) { LogHelper.WriteLog("更新文件MD5时未查找到对应文件信息", null, null); return; }
 
-                        upload.MD5 = MD5;
+                    upload.MD5 = MD5;
 
-                        db.Entry(upload).State = System.Data.Entity.EntityState.Modified;
+                    db.Entry(upload).State = System.Data.Entity.EntityState.Modified;
 
-                        db.SaveChanges();
-                    }
+                    db.SaveChanges();
                 }
-                catch (Exception ex)
-                {
-                    LogHelper.WriteLog("更新文明MD5时出错", ex.Message, ex.StackTrace);
-                }
-            });
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog("更新文件MD5时出错", ex.Message, ex.StackTrace);
+            }
         }
+
+        private void SetFileServerID(string id, string serverFileID)
+        {
+            try
+            {
+                using (DBContext db = new DBContext())
+                {
+                    UploadFiles upload = db.UploadFiles.Where(q => q.ID.Equals(id)).FirstOrDefault();
+
+                    if (upload == null) { LogHelper.WriteLog("更新文件服务端ID时未查找到对应文件信息", null, null); return; }
+
+                    upload.ServerFileID = serverFileID;
+
+                    db.Entry(upload).State = System.Data.Entity.EntityState.Modified;
+
+                    db.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog("更新文件服务端ID时出错", ex.Message, ex.StackTrace);
+            }
+        }
+        #endregion
 
         #region MD5
         private void MD5Check(FileListItem item)
@@ -226,7 +264,7 @@ namespace SkyDrive.Client
             //更新对应控件以及sqllite中对应文件信息的MD5值
             control.MD5 = MD5;
 
-            SetFileMD5(id, MD5);
+            await Task.Run(() => SetFileMD5(id, MD5));
 
             RequestResult result = await Task.Run(() => { return RequestContext.Post("md5Check", "md5Str=" + MD5); });
 
@@ -294,7 +332,7 @@ namespace SkyDrive.Client
         /// 上传文件信息之后事件的委托
         /// </summary>
         /// <param name="control"></param>
-        private delegate void AfterUploadUserFile(FileListItem control);
+        private delegate void AfterUploadUserFile(FileListItem control, string fileID);
 
         private async void UploadUserFile(FileListItem control, AfterUploadUserFile afterUploadUserFile)
         {
@@ -304,20 +342,20 @@ namespace SkyDrive.Client
 
             if (uploadInfoResult.Flag < 0) { SetFileItemMsg(control, "初始化服务器文件出错", Color.Red); return; }
 
-            afterUploadUserFile(control);
+            afterUploadUserFile(control, uploadInfoResult.Data.ToString());
         }
 
-        private void UploadInNormal(FileListItem control)
+        private void UploadInNormal(FileListItem control, string fileID)
         {
+            Task.Run(() => { SetFileServerID(control.ID, fileID); });
 
+            control.ServerFileID = fileID;
+
+            control.UploadState = 1;
         }
 
-        private void UploadInSecond(FileListItem control)
+        private void UploadInSecond(FileListItem control, string fileID)
         {
-            Task.Run(() => { RemoveFileInfo(control.ID); });
-
-            lock (uploadList) { uploadList.Remove(control); }
-
             control.Dispose();
         }
         #endregion

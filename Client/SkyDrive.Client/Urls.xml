@@ -7,4 +7,8 @@
     <key>newUserFile</key>
     <value>/File/NewUserFile</value>
   </url>
+  <url>
+    <key>getFileInfo</key>
+    <value>/File/GetFileInfo</value>
+  </url>
 </xml>
