@@ -79,6 +79,7 @@ namespace SkyDrive.Client
                 item.FileSource = info.FullName;
                 item.Dock = DockStyle.Top;
                 item.ChangeState += Item_ChangeState;
+                item.UploadTimerElapsed += Item_UploadTimerElapsed;
                 item.Disposed += Item_Disposed;
                 return item;
             });
@@ -95,25 +96,25 @@ namespace SkyDrive.Client
             string temp = AppDomain.CurrentDomain.BaseDirectory + "\\Temp\\" + control.FileName; //临时文件路径
 
             if (File.Exists(temp)) { File.Delete(temp); }
+
+            if (control.UploadTimer != null) { control.UploadTimer.Dispose(); }
         }
 
         private void Item_ChangeState(FileListItem sender, int state)
         {
             if (state == 0) { sender.UploadTimer.Dispose(); return; }
 
-            System.Timers.Timer timer = new System.Timers.Timer();
-            timer.Interval = 1000;
-            timer.Elapsed += Timer_Elapsed;
+            System.Timers.Timer timer = sender.CreateUploadTimer();
 
-            sender.UploadTimer = timer;
+            timer.Start();
         }
 
-        private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void Item_UploadTimerElapsed(FileListItem sender, System.Timers.ElapsedEventArgs e)
         {
             throw new NotImplementedException();
         }
 
-        #region sqllite
+        #region SQLLITE
 
         private void SaveFileInfo(FileListItem item)
         {

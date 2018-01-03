@@ -104,6 +104,15 @@ namespace SkyDrive.Client
         /// 上传状态改变的事件
         /// </summary>
         public event ChangeStateHandler ChangeState;
+        /// <summary>
+        /// 上传定时委托
+        /// </summary>
+        /// <param name="sender"></param>
+        public delegate void UploadTimerElapsedHandler(FileListItem sender, System.Timers.ElapsedEventArgs e);
+        /// <summary>
+        /// 上传定时事件
+        /// </summary>
+        public event UploadTimerElapsedHandler UploadTimerElapsed;
         #endregion
 
         #region 私有方法
@@ -130,6 +139,22 @@ namespace SkyDrive.Client
         private void btn_play_Click(object sender, EventArgs e)
         {
             UploadState = _UploadState == 0 ? 1 : 0;
+        }
+
+        public System.Timers.Timer CreateUploadTimer()
+        {
+            System.Timers.Timer timer = new System.Timers.Timer();
+            timer.Interval = 1000;
+            timer.Elapsed += Timer_Elapsed;
+
+            this.UploadTimer = timer;
+
+            return timer;
+        }
+
+        private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            UploadTimerElapsed?.Invoke(this, e);
         }
     }
 }
