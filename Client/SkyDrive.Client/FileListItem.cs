@@ -92,6 +92,8 @@ namespace SkyDrive.Client
         public string BackUpName { get; set; }
 
         public System.Timers.Timer UploadTimer { get; set; }
+
+        public StreamHelper IStream { get; set; }
         #endregion
 
         #region 委托和事件
@@ -144,7 +146,7 @@ namespace SkyDrive.Client
         public System.Timers.Timer CreateUploadTimer()
         {
             System.Timers.Timer timer = new System.Timers.Timer();
-            timer.Interval = 1000;
+            timer.Interval = 100;
             timer.Elapsed += Timer_Elapsed;
 
             this.UploadTimer = timer;

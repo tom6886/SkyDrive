@@ -43,5 +43,22 @@ namespace SkyDrive.Client
 
             return JsonConvert.DeserializeObject<RequestResult>(returnStr);
         }
+
+        public static RequestResult PostFile(string key, string header, string fileID, byte[] data)
+        {
+            if (!urls.ContainsKey(key)) { return null; }
+
+            string url = baseUrl + urls[key] + "?id=" + fileID;
+
+            WebClient wCient = new WebClient();
+
+            wCient.Headers.Add(HttpRequestHeader.ContentRange, header);
+
+            byte[] responseData = wCient.UploadData(url, "POST", data);//得到返回字符流  
+
+            string returnStr = Encoding.UTF8.GetString(responseData);//解码  
+
+            return JsonConvert.DeserializeObject<RequestResult>(returnStr);
+        }
     }
 }

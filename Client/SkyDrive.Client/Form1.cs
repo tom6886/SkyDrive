@@ -77,6 +77,7 @@ namespace SkyDrive.Client
                 item.BackUpName = info.Name;
                 item.FileSize = info.Length;
                 item.FileSource = info.FullName;
+                item.IStream = new StreamHelper(info.FullName, 0);
                 item.Dock = DockStyle.Top;
                 item.ChangeState += Item_ChangeState;
                 item.UploadTimerElapsed += Item_UploadTimerElapsed;
