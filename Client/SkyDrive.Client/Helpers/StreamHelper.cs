@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SkyDrive.Client
 {
-    public class StreamHelper
+    public class StreamHelper : IDisposable
     {
         private byte[] Data;
 
@@ -13,9 +13,18 @@ namespace SkyDrive.Client
 
         public BinaryReader Reader { get; private set; }
 
-        public int CurrentPositon { get; private set; }
+        public long CurrentPositon { get; private set; }
 
-        public StreamHelper(string path, int position)
+        public long NextPositon
+        {
+            get
+            {
+                long position = CurrentPositon + ByteCount;
+                return position > Stream.Length ? Stream.Length : position;
+            }
+        }
+
+        public StreamHelper(string path, long position)
         {
             Stream = new FileStream(path, FileMode.Open, FileAccess.Read);
             Reader = new BinaryReader(Stream);
@@ -44,6 +53,12 @@ namespace SkyDrive.Client
             CurrentPositon += ByteCount;
 
             return Data;
+        }
+
+        public void Dispose()
+        {
+            Stream.Close();
+            Reader.Close();
         }
     }
 }

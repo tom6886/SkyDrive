@@ -104,6 +104,7 @@
     <Compile Include="Helpers\RequestContext.cs" />
     <Compile Include="Helpers\RequestResult.cs" />
     <Compile Include="Helpers\StaticMenus.cs" />
+    <Compile Include="Helpers\StreamHelper.cs" />
     <EmbeddedResource Include="FileListItem.resx">
       <DependentUpon>FileListItem.cs</DependentUpon>
     </EmbeddedResource>

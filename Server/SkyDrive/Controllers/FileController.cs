@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json;
 using SkyDrive.Models;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace SkyDrive.Controllers
@@ -111,6 +113,19 @@ namespace SkyDrive.Controllers
             {
                 return JsonConvert.SerializeObject(new RequestResult() { Flag = -2, Message = "查询文件失败" });
             }
+        }
+
+        [HttpPost]
+        public void UploadFile()
+        {
+            var buffer = new MemoryStream();
+            Request.Body.CopyTo(buffer);
+
+            Request.Headers.TryGetValue("Content-Range", out StringValues range);
+
+            string fileID = Request.Query["id"];
+
+
         }
     }
 }

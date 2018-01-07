@@ -11,4 +11,8 @@
     <key>getFileInfo</key>
     <value>/File/GetFileInfo</value>
   </url>
+  <url>
+    <key>uploadFile</key>
+    <value>/File/UploadFile</value>
+  </url>
 </xml>

@@ -77,7 +77,7 @@ namespace SkyDrive.Client
                 item.BackUpName = info.Name;
                 item.FileSize = info.Length;
                 item.FileSource = info.FullName;
-                item.IStream = new StreamHelper(info.FullName, 0);
+                //item.IStream = new StreamHelper(info.FullName, 0);
                 item.Dock = DockStyle.Top;
                 item.ChangeState += Item_ChangeState;
                 item.UploadTimerElapsed += Item_UploadTimerElapsed;
@@ -94,7 +94,7 @@ namespace SkyDrive.Client
 
             lock (uploadList) { uploadList.Remove(control); }
 
-            string temp = AppDomain.CurrentDomain.BaseDirectory + "\\Temp\\" + control.FileName; //临时文件路径
+            string temp = AppDomain.CurrentDomain.BaseDirectory + "\\Temp\\" + control.BackUpName; //临时文件路径
 
             if (File.Exists(temp)) { File.Delete(temp); }
 
@@ -112,7 +112,9 @@ namespace SkyDrive.Client
 
         private void Item_UploadTimerElapsed(FileListItem sender, System.Timers.ElapsedEventArgs e)
         {
-            throw new NotImplementedException();
+            string header = string.Format("bytes {0}-{1}/{2}", sender.IStream.CurrentPositon, sender.IStream.NextPositon, sender.IStream.Stream.Length);
+
+            RequestResult result = RequestContext.PostFile("uploadFile", header, sender.ServerFileID, sender.IStream.GetNextChunk());
         }
 
         #region SQLLITE

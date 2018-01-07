@@ -143,15 +143,31 @@ namespace SkyDrive.Client
             UploadState = _UploadState == 0 ? 1 : 0;
         }
 
+        /// <summary>
+        /// 创建一个定时器 利用定时器的线程向服务器上传文件
+        /// 创建定时器的同时从服务器获取文件上传进度 同步到本地 创建上传辅助类
+        /// 释放定时器的同时也释放辅助类
+        /// </summary>
+        /// <returns></returns>
         public System.Timers.Timer CreateUploadTimer()
         {
             System.Timers.Timer timer = new System.Timers.Timer();
             timer.Interval = 100;
             timer.Elapsed += Timer_Elapsed;
+            timer.Disposed += Timer_Disposed;
 
             this.UploadTimer = timer;
 
             return timer;
+        }
+
+        private void Timer_Disposed(object sender, EventArgs e)
+        {
+            if (IStream != null)
+            {
+                IStream.Dispose();
+                IStream = null;
+            }
         }
 
         private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
